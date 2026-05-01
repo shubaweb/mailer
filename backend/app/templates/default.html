@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body { margin: 0; padding: 0; background: #f1f5f9; font-family: Arial, Helvetica, sans-serif; }
+    .wrapper { max-width: 600px; margin: 32px auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .header { background: #4f46e5; padding: 32px; color: #ffffff; }
+    .header h1 { margin: 0; font-size: 24px; }
+    .body { padding: 32px; color: #1e293b; line-height: 1.6; }
+    .body p { margin: 0 0 16px; }
+    .footer { padding: 16px 32px; background: #f8fafc; color: #94a3b8; font-size: 12px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <h1>Привет, {{first_name}}!</h1>
+    </div>
+    <div class="body">
+      <p>Уважаемый(ая) {{first_name}} {{last_name}},</p>
+      <p>
+        Мы обращаемся к вам как к представителю компании <strong>{{company_name}}</strong>
+        с важным предложением.
+      </p>
+      <p>
+        Здесь может быть основной текст вашего письма. Отредактируйте шаблон
+        в <code>backend/app/templates/default.html</code>.
+      </p>
+      <p>С уважением,<br/>Команда Mailer</p>
+    </div>
+    <div class="footer">Вы получили это письмо, так как ваш адрес был добавлен в рассылку.</div>
+  </div>
+</body>
+</html>
