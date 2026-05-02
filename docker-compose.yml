@@ -33,6 +33,9 @@ services:
       - "8000:8000"
     volumes:
       - uploads_data:/app/uploads
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     depends_on:
       db:
         condition: service_healthy
@@ -50,6 +53,9 @@ services:
       OAUTHLIB_INSECURE_TRANSPORT: "1"
     volumes:
       - uploads_data:/app/uploads
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     depends_on:
       db:
         condition: service_healthy

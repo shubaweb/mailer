@@ -125,7 +125,7 @@ def send_campaign_task(campaign_id: int) -> None:
                     tmp_pdf.unlink()
 
             db.commit()
-            time.sleep(2)
+            time.sleep(10)
 
         campaign.status = "completed"
         campaign.completed_at = datetime.utcnow()
