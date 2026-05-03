@@ -1,9 +1,11 @@
 import smtplib
 import ssl
 from email import encoders
+from email.header import Header
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import formataddr
 from pathlib import Path
 
 
@@ -23,7 +25,7 @@ def send_email(
     if attachments:
         message: MIMEMultipart = MIMEMultipart("mixed")
         html_part = MIMEMultipart("alternative")
-        html_part.attach(MIMEText(html_body, "html"))
+        html_part.attach(MIMEText(html_body, "html", "utf-8"))
         message.attach(html_part)
         for name, path in attachments:
             part = MIMEBase("application", "octet-stream")
@@ -33,28 +35,26 @@ def send_email(
             message.attach(part)
     else:
         message = MIMEMultipart("alternative")
-        message.attach(MIMEText(html_body, "html"))
+        message.attach(MIMEText(html_body, "html", "utf-8"))
 
-    sender = f"{from_name} <{from_email}>" if from_name else from_email
-    message["From"] = sender
+    message["From"] = formataddr((from_name or "", from_email))
     message["To"] = to
-    message["Subject"] = subject
+    message["Subject"] = Header(subject, "utf-8")
 
     ctx = ssl.create_default_context()
-
     timeout = 15
 
     if encryption == "ssl":
         with smtplib.SMTP_SSL(host, port, context=ctx, timeout=timeout) as server:
             server.login(username, password)
-            server.sendmail(from_email, to, message.as_bytes())
+            server.send_message(message)
     elif encryption == "starttls":
         with smtplib.SMTP(host, port, timeout=timeout) as server:
             server.ehlo()
             server.starttls(context=ctx)
             server.login(username, password)
-            server.sendmail(from_email, to, message.as_bytes())
+            server.send_message(message)
     else:
         with smtplib.SMTP(host, port, timeout=timeout) as server:
             server.login(username, password)
-            server.sendmail(from_email, to, message.as_bytes())
+            server.send_message(message)
