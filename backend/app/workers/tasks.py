@@ -71,6 +71,16 @@ def send_campaign_task(campaign_id: int) -> None:
         for email_rec in emails:
             tmp_pdf: Path | None = None
             try:
+                to_addresses = ", ".join(
+                    addr.strip() for addr in (email_rec.email or "").split(",") if addr.strip()
+                )
+                if not to_addresses:
+                    email_rec.status = "failed"
+                    email_rec.error_message = "No valid email address"
+                    campaign.error_count += 1
+                    db.commit()
+                    continue
+
                 now = datetime.utcnow()
                 data = dict(email_rec.row_data or {})
                 data.setdefault("email", email_rec.email or "")
@@ -122,13 +132,13 @@ def send_campaign_task(campaign_id: int) -> None:
                         username=smtp_info["username"], password=smtp_info["password"],
                         encryption=smtp_info["encryption"],
                         from_email=smtp_info["from_email"], from_name=smtp_info["from_name"],
-                        to=email_rec.email, subject=subject, html_body=html_body,
+                        to=to_addresses, subject=subject, html_body=html_body,
                         attachments=all_attachments or None,
                     )
                 else:
                     send_gmail(
                         creds.client_id, creds.client_secret, creds.refresh_token,
-                        email_rec.email, subject, html_body,
+                        to_addresses, subject, html_body,
                         attachments=all_attachments or None,
                     )
                 email_rec.status = "sent"
