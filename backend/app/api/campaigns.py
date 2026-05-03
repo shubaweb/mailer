@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from app.database import get_db
-from app.models import Campaign, CampaignEmail, GmailCredentials, Attachment, TemplateFile, EmailTemplate
+from app.models import Campaign, CampaignEmail, GmailCredentials, Attachment, TemplateFile, EmailTemplate, SmtpSettings
 from app.schemas import CampaignOut, CampaignDetailOut
 
 router = APIRouter(prefix="/api/campaigns", tags=["campaigns"])
@@ -41,8 +41,9 @@ async def create_campaign(
     db: Session = Depends(get_db),
 ):
     creds = db.query(GmailCredentials).first()
-    if not creds or not creds.refresh_token:
-        raise HTTPException(status_code=400, detail="Gmail not connected")
+    smtp = db.query(SmtpSettings).first()
+    if not smtp and (not creds or not creds.refresh_token):
+        raise HTTPException(status_code=400, detail="Настройте Gmail или SMTP для отправки")
 
     content = await file.read()
     try:

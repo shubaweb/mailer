@@ -15,8 +15,9 @@ celery_app.conf.task_serializer = "json"
 @celery_app.task(name="send_campaign")
 def send_campaign_task(campaign_id: int) -> None:
     from app.database import SessionLocal
-    from app.models import Campaign, CampaignEmail, GmailCredentials
-    from app.services.gmail_service import send_email
+    from app.models import Campaign, CampaignEmail, GmailCredentials, SmtpSettings
+    from app.services.gmail_service import send_email as send_gmail
+    from app.services.smtp_service import send_email as send_smtp
     from app.templates import render_template
 
     db = SessionLocal()
@@ -46,10 +47,21 @@ def send_campaign_task(campaign_id: int) -> None:
             email_template_html = campaign.email_template.body
             email_template_subject = campaign.email_template.subject
 
+        smtp_row = db.query(SmtpSettings).first()
+        smtp_info: dict | None = None
+        if smtp_row:
+            smtp_info = {
+                "host": smtp_row.host, "port": smtp_row.port,
+                "username": smtp_row.username, "password": smtp_row.password,
+                "encryption": smtp_row.encryption,
+                "from_email": smtp_row.from_email, "from_name": smtp_row.from_name,
+            }
+
+        creds = db.query(GmailCredentials).first() if not smtp_info else None
+
         campaign.status = "running"
         db.commit()
 
-        creds = db.query(GmailCredentials).first()
         emails = (
             db.query(CampaignEmail)
             .filter(CampaignEmail.campaign_id == campaign_id)
@@ -104,15 +116,21 @@ def send_campaign_task(campaign_id: int) -> None:
 
                 all_attachments.extend(static_attachments)
 
-                send_email(
-                    creds.client_id,
-                    creds.client_secret,
-                    creds.refresh_token,
-                    email_rec.email,
-                    subject,
-                    html_body,
-                    attachments=all_attachments or None,
-                )
+                if smtp_info:
+                    send_smtp(
+                        host=smtp_info["host"], port=smtp_info["port"],
+                        username=smtp_info["username"], password=smtp_info["password"],
+                        encryption=smtp_info["encryption"],
+                        from_email=smtp_info["from_email"], from_name=smtp_info["from_name"],
+                        to=email_rec.email, subject=subject, html_body=html_body,
+                        attachments=all_attachments or None,
+                    )
+                else:
+                    send_gmail(
+                        creds.client_id, creds.client_secret, creds.refresh_token,
+                        email_rec.email, subject, html_body,
+                        attachments=all_attachments or None,
+                    )
                 email_rec.status = "sent"
                 email_rec.sent_at = datetime.utcnow()
                 campaign.sent_count += 1

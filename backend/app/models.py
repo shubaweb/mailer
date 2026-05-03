@@ -5,6 +5,19 @@ from sqlalchemy.sql import func
 from app.database import Base
 
 
+class SmtpSettings(Base):
+    __tablename__ = "smtp_settings"
+
+    id = Column(Integer, primary_key=True)
+    host = Column(String, nullable=False)
+    port = Column(Integer, nullable=False, default=587)
+    username = Column(String, nullable=False)
+    password = Column(String, nullable=False)
+    encryption = Column(String, nullable=False, default="starttls")  # starttls | ssl | none
+    from_email = Column(String, nullable=False)
+    from_name = Column(String, nullable=True)
+
+
 class EmailTemplate(Base):
     __tablename__ = "email_templates"
 

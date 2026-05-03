@@ -3,6 +3,26 @@ from typing import Optional, List
 from datetime import datetime
 
 
+class SmtpSettingsCreate(BaseModel):
+    host: str
+    port: int = 587
+    username: str
+    password: str
+    encryption: str = "starttls"
+    from_email: str
+    from_name: Optional[str] = None
+
+
+class SmtpStatusOut(BaseModel):
+    configured: bool
+    host: Optional[str] = None
+    port: Optional[int] = None
+    username: Optional[str] = None
+    encryption: Optional[str] = None
+    from_email: Optional[str] = None
+    from_name: Optional[str] = None
+
+
 class EmailTemplateCreate(BaseModel):
     name: str
     subject: str

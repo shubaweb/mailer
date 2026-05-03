@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 from app.database import Base, engine
-from app.api import gmail, campaigns, attachments, templates, email_templates
+from app.api import gmail, campaigns, attachments, templates, email_templates, smtp
 from app.config import settings
 
 app = FastAPI(title="Mailer API")
@@ -21,6 +21,7 @@ app.include_router(campaigns.router)
 app.include_router(attachments.router)
 app.include_router(templates.router)
 app.include_router(email_templates.router)
+app.include_router(smtp.router)
 
 
 @app.on_event("startup")
@@ -48,6 +49,18 @@ def startup():
             "ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS "
             "email_template_id INTEGER REFERENCES email_templates(id) ON DELETE SET NULL"
         ))
+        conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS smtp_settings (
+                id SERIAL PRIMARY KEY,
+                host VARCHAR NOT NULL,
+                port INTEGER NOT NULL DEFAULT 587,
+                username VARCHAR NOT NULL,
+                password VARCHAR NOT NULL,
+                encryption VARCHAR NOT NULL DEFAULT 'starttls',
+                from_email VARCHAR NOT NULL,
+                from_name VARCHAR
+            )
+        """))
         conn.commit()
 
 
