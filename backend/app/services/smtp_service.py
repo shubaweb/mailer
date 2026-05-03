@@ -1,10 +1,6 @@
 import smtplib
 import ssl
-from email import encoders
-from email.header import Header
-from email.mime.base import MIMEBase
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+from email.message import EmailMessage
 from email.utils import formataddr
 from pathlib import Path
 
@@ -22,39 +18,33 @@ def send_email(
     html_body: str,
     attachments: list[tuple[str, Path]] | None = None,
 ) -> None:
-    if attachments:
-        message: MIMEMultipart = MIMEMultipart("mixed")
-        html_part = MIMEMultipart("alternative")
-        html_part.attach(MIMEText(html_body, "html", "utf-8"))
-        message.attach(html_part)
-        for name, path in attachments:
-            part = MIMEBase("application", "octet-stream")
-            part.set_payload(path.read_bytes())
-            encoders.encode_base64(part)
-            part.add_header("Content-Disposition", "attachment", filename=name)
-            message.attach(part)
-    else:
-        message = MIMEMultipart("alternative")
-        message.attach(MIMEText(html_body, "html", "utf-8"))
+    msg = EmailMessage()
+    msg["From"] = formataddr((from_name, from_email)) if from_name else from_email
+    msg["To"] = to
+    msg["Subject"] = subject
+    msg.set_content(html_body, subtype="html", charset="utf-8")
 
-    message["From"] = formataddr((from_name or "", from_email))
-    message["To"] = to
-    message["Subject"] = Header(subject, "utf-8")
+    if attachments:
+        for name, path in attachments:
+            data = path.read_bytes()
+            msg.add_attachment(data, maintype="application", subtype="octet-stream", filename=name)
 
     ctx = ssl.create_default_context()
     timeout = 15
 
+    to_list = [addr.strip() for addr in to.split(",") if addr.strip()]
+
     if encryption == "ssl":
         with smtplib.SMTP_SSL(host, port, context=ctx, timeout=timeout) as server:
             server.login(username, password)
-            server.send_message(message)
+            server.send_message(msg, from_addr=from_email, to_addrs=to_list)
     elif encryption == "starttls":
         with smtplib.SMTP(host, port, timeout=timeout) as server:
             server.ehlo()
             server.starttls(context=ctx)
             server.login(username, password)
-            server.send_message(message)
+            server.send_message(msg, from_addr=from_email, to_addrs=to_list)
     else:
         with smtplib.SMTP(host, port, timeout=timeout) as server:
             server.login(username, password)
-            server.send_message(message)
+            server.send_message(msg, from_addr=from_email, to_addrs=to_list)
