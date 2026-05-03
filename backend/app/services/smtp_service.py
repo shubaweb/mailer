@@ -42,17 +42,19 @@ def send_email(
 
     ctx = ssl.create_default_context()
 
+    timeout = 15
+
     if encryption == "ssl":
-        with smtplib.SMTP_SSL(host, port, context=ctx) as server:
+        with smtplib.SMTP_SSL(host, port, context=ctx, timeout=timeout) as server:
             server.login(username, password)
             server.sendmail(from_email, to, message.as_bytes())
     elif encryption == "starttls":
-        with smtplib.SMTP(host, port) as server:
+        with smtplib.SMTP(host, port, timeout=timeout) as server:
             server.ehlo()
             server.starttls(context=ctx)
             server.login(username, password)
             server.sendmail(from_email, to, message.as_bytes())
     else:
-        with smtplib.SMTP(host, port) as server:
+        with smtplib.SMTP(host, port, timeout=timeout) as server:
             server.login(username, password)
             server.sendmail(from_email, to, message.as_bytes())
