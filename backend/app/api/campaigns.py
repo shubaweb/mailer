@@ -34,6 +34,7 @@ def list_campaigns(db: Session = Depends(get_db)):
 @router.post("", response_model=CampaignOut)
 async def create_campaign(
     name: str = Form(...),
+    subject: Optional[str] = Form(default=None),
     file: UploadFile = File(...),
     attachment_ids: List[int] = Form(default=[]),
     template_id: Optional[int] = Form(default=None),
@@ -64,7 +65,7 @@ async def create_campaign(
     if email_template_id and not db.query(EmailTemplate).filter(EmailTemplate.id == email_template_id).first():
         raise HTTPException(status_code=400, detail="Email template not found")
 
-    campaign = Campaign(name=name, total_count=len(rows), template_id=template_id, email_template_id=email_template_id)
+    campaign = Campaign(name=name, subject=subject or None, total_count=len(rows), template_id=template_id, email_template_id=email_template_id)
     db.add(campaign)
     db.flush()
 

@@ -49,6 +49,9 @@ def startup():
             "ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS "
             "email_template_id INTEGER REFERENCES email_templates(id) ON DELETE SET NULL"
         ))
+        conn.execute(text(
+            "ALTER TABLE campaigns ADD COLUMN IF NOT EXISTS subject VARCHAR"
+        ))
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS smtp_settings (
                 id SERIAL PRIMARY KEY,

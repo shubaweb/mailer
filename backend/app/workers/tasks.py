@@ -29,6 +29,7 @@ def send_campaign_task(campaign_id: int) -> None:
 
         # Read all ORM relationship data into plain Python values BEFORE any commit.
         campaign_template_name = campaign.template_name
+        campaign_subject: str | None = campaign.subject
         static_attachments = [
             (a.original_name, UPLOADS_DIR / a.filename)
             for a in campaign.attachments
@@ -93,7 +94,7 @@ def send_campaign_task(campaign_id: int) -> None:
 
                 if email_template_html is not None:
                     html_body = email_template_html
-                    subject = email_template_subject or ""
+                    subject = campaign_subject or email_template_subject or ""
                     for key, value in data.items():
                         html_body = html_body.replace("{{" + key + "}}", str(value))
                         subject = subject.replace("{{" + key + "}}", str(value))

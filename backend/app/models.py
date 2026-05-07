@@ -85,6 +85,7 @@ class Campaign(Base):
     completed_at = Column(DateTime, nullable=True)
 
     email_template_id = Column(Integer, ForeignKey("email_templates.id", ondelete="SET NULL"), nullable=True)
+    subject = Column(String, nullable=True)
 
     emails = relationship("CampaignEmail", back_populates="campaign")
     attachments = relationship("Attachment", secondary=campaign_attachments)

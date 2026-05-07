@@ -61,6 +61,7 @@ class CampaignEmailOut(BaseModel):
 class CampaignOut(BaseModel):
     id: int
     name: str
+    subject: Optional[str] = None
     template_name: str
     status: str
     total_count: int

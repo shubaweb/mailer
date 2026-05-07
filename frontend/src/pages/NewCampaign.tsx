@@ -34,6 +34,7 @@ export default function NewCampaign() {
   const [templateId, setTemplateId] = useState<number | null>(null)
   const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([])
   const [emailTemplateId, setEmailTemplateId] = useState<number | null>(null)
+  const [subject, setSubject] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
@@ -60,6 +61,7 @@ export default function NewCampaign() {
     try {
       const fd = new FormData()
       fd.append('name', name)
+      if (subject.trim()) fd.append('subject', subject.trim())
       fd.append('file', file)
       selectedIds.forEach(id => fd.append('attachment_ids', String(id)))
       if (templateId !== null) fd.append('template_id', String(templateId))
@@ -92,6 +94,19 @@ export default function NewCampaign() {
               style={input}
               placeholder="Рассылка апрель 2026"
               required
+            />
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={labelStyle}>Тема письма</label>
+            <p style={{ fontSize: 12, color: '#6b7280', margin: '4px 0 6px' }}>
+              Поддерживает плейсхолдеры: <code>{'{{company_name}}'}</code>, <code>{'{{first_name}}'}</code> и любые колонки из CSV
+            </p>
+            <input
+              value={subject}
+              onChange={e => setSubject(e.target.value)}
+              style={input}
+              placeholder="Пропозиція для {{company_name}}"
             />
           </div>
 
@@ -220,7 +235,7 @@ export default function NewCampaign() {
                     type="radio"
                     name="email_template"
                     checked={emailTemplateId === null}
-                    onChange={() => setEmailTemplateId(null)}
+                    onChange={() => { setEmailTemplateId(null); setSubject('') }}
                     style={{ width: 16, height: 16, cursor: 'pointer' }}
                   />
                   <span style={{ fontSize: 14, color: '#6b7280' }}>Стандартный шаблон</span>
@@ -236,7 +251,7 @@ export default function NewCampaign() {
                       type="radio"
                       name="email_template"
                       checked={emailTemplateId === t.id}
-                      onChange={() => setEmailTemplateId(t.id)}
+                      onChange={() => { setEmailTemplateId(t.id); setSubject(prev => prev || t.subject) }}
                       style={{ width: 16, height: 16, cursor: 'pointer', marginTop: 2 }}
                     />
                     <div>
